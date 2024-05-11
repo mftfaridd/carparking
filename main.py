@@ -18,9 +18,9 @@ cap = cv2.VideoCapture(1)
 prev_frame_time = 0 
 new_frame_time = 0
 
+# Import lokasi masing" slot parkir
 with open('CarParkPos', 'rb') as f:
      posList = pickle.load(f)
-    
 with open('CarParkPos2', 'rb') as f:
     posList2 = pickle.load(f)
 
