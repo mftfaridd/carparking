@@ -4,12 +4,10 @@ import numpy as np
 import time
 import datetime
 import pyrebase
-# import firebase_admin
-# from firebase_admin import credentials, firestore
 from cekmaling import prediksimaling
 
+# import model
 net = cv2.dnn.readNetFromDarknet("yolov4-tiny-custom_mobil.cfg","yolov4-tiny-custom_final_mobil.weights")
-
 classes = ['mobil']
 
 # Video feed
@@ -26,6 +24,7 @@ with open('CarParkPos', 'rb') as f:
 with open('CarParkPos2', 'rb') as f:
     posList2 = pickle.load(f)
 
+# select API untuk kirim data ke firebase
 firebaseConfig= {
     "apiKey": "AIzaSyAHITI7sMlrEDdtnncGKDjH4N2xBKhqSJ4",
     "authDomain": "web-parkir.firebaseapp.com",
@@ -37,14 +36,7 @@ firebaseConfig= {
     "measurementId": "G-8Z19WV72JW" 
 }
 
-
-# storage = firebase.storage()
-
-# cred = credentials.Certificate("web-parkir-firebase-adminsdk-gwjv3-edcaa1e7c2.json")
-# firebase_admin.initialize_app(cred)
-
-# firestore.client()
-
+# inisiasi tanggal
 def tanggal():
     x = datetime.datetime.now()
     time = str(x.strftime("%X"))
@@ -57,6 +49,7 @@ def tanggal():
     date += time
     return date
 
+# fungsi deteksi mobil untuk tiap slot parkir
 def predikslot(imgCrop):
     global arr
     global j
@@ -109,7 +102,7 @@ def predikslot(imgCrop):
             cv2.putText(imgCrop, fps, (x,y+200), font, 2, color, 2)
     return imgCrop
 
-
+# Crop gambar untuk tiap slot parkit
 def checkParkingSpace(imgPro):
     global arr
     global prev_frame_time
@@ -126,40 +119,16 @@ def checkParkingSpace(imgPro):
         imgBg[q:q + h, p:p + w] = imgCropped
         predikslot(imgBg)
         cv2.imshow(str(j), imgBg)
-       
-        
-        #print (arr[0],arr[1],arr[2],arr[3],arr[4],arr[5])
-#        print ("slot ke-",j," ",arr[j])
         j = j+1
     
-#    for pos in posList2:
-#        p, q = pos
-#        w, h = 70, 50
-#        imgBg = cv2.imread('white.png')
-#        imgBg = cv2.resize(imgBg, (960, 720))
-#        imgCropped = imgPro[q:q + h, p:p + w]
-#        imgBg[q:q + h, p:p + w] = imgCropped
-#        cv2.imwrite(str(j)+".jpg", imgBg)
-#        imgSlot = cv2.imread(str(j)+".jpg")
-        
-#        imgCrop = predikslot(imgSlot)
-#        cv2.imshow(str(j), imgCrop)
-       
-#        #print ("slot ke-",j," ",arr[j])
-#        j = j+1
-        
+    # kirim data slot parkir ke firebase
     firebase = pyrebase.initialize_app(firebaseConfig)
     database = firebase.database()
     data = {"Slot1": arr[0], "Slot2": arr[1], "Slot3": arr[2], "Slot4": arr[3], "Slot5": arr[4], "Slot6": arr[5], "Slot7": arr[6], "Slot8": arr[7]}
     database.child("data").set(data)
     print (arr[0],arr[1],arr[2],arr[3],arr[4],arr[5],arr[6])
-        
-    
-
-    
 
 
- 
 while True:
  
     if cap.get(cv2.CAP_PROP_POS_FRAMES) == cap.get(cv2.CAP_PROP_FRAME_COUNT):
